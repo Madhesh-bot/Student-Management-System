@@ -112,7 +112,7 @@ const Login = () => {
           );
         }
         setSuccess('Registration successful! Logging in...');
-        setTimeout(() => navigate('/'), 1500);
+        navigate('/');
       } else {
         await authService.login(formData.email, formData.password);
         navigate('/');

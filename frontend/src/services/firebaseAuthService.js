@@ -233,7 +233,7 @@ export const firebaseAuthService = {
         throw new Error(backendErr.response?.data?.message || backendErr.message || 'MySQL database user registration failed');
       }
 
-      // 3. Store user metadata in Firestore 'users' collection with firebase_uid
+      // 3. Store user metadata in Firestore 'users' collection (non-blocking)
       const userProfile = {
         uid: firebaseUid,
         firebase_uid: firebaseUid,
@@ -250,26 +250,27 @@ export const firebaseAuthService = {
         createdAt: serverTimestamp()
       };
 
-      try {
-        await setDoc(doc(db, 'users', firebaseUid), userProfile);
-        if (role.toLowerCase() === 'student') {
-          await setDoc(doc(db, 'students', firebaseUid), {
-            uid: firebaseUid,
-            firebase_uid: firebaseUid,
-            name,
-            email: email.toLowerCase(),
-            register_number: extraFields.register_number || '',
-            department: extraFields.department || '',
-            year: extraFields.year || '1',
-            section: extraFields.section || 'A',
-            gender: extraFields.gender || 'Male',
-            phone: extraFields.phone || '',
-            address: extraFields.address || '',
-            createdAt: serverTimestamp()
-          });
-        }
-      } catch (firestoreErr) {
-        console.warn('ℹ️ Firestore backup doc creation notice:', firestoreErr.message);
+      setDoc(doc(db, 'users', firebaseUid), userProfile).catch(err => {
+        console.warn('ℹ️ Firestore backup doc creation notice:', err.message);
+      });
+
+      if (role.toLowerCase() === 'student') {
+        setDoc(doc(db, 'students', firebaseUid), {
+          uid: firebaseUid,
+          firebase_uid: firebaseUid,
+          name,
+          email: email.toLowerCase(),
+          register_number: extraFields.register_number || '',
+          department: extraFields.department || '',
+          year: extraFields.year || '1',
+          section: extraFields.section || 'A',
+          gender: extraFields.gender || 'Male',
+          phone: extraFields.phone || '',
+          address: extraFields.address || '',
+          createdAt: serverTimestamp()
+        }).catch(err => {
+          console.warn('ℹ️ Firestore student doc creation notice:', err.message);
+        });
       }
 
       const idToken = jwtToken || (firebaseUser ? await getIdToken(firebaseUser, true) : 'MOCK_TOKEN');
