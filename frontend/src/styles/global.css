@@ -1,0 +1,233 @@
+/* Global Reset & Enterprise Layout Framework */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-sans);
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+/* Custom Smooth Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* Links & Focus Outline */
+a {
+  color: var(--primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--primary-hover);
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Base App Shell Layout */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100%;
+}
+
+.main-content {
+  flex-grow: 1;
+  margin-left: var(--sidebar-width);
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  transition: margin-left var(--transition-bounce);
+  background-color: var(--bg-body);
+}
+
+.main-content.collapsed {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+.page-container {
+  padding: var(--content-padding);
+  flex-grow: 1;
+  width: 100%;
+  max-width: 1600px;
+  margin: 0 auto;
+  animation: pageFadeSlide 0.4s var(--transition-bounce) forwards;
+}
+
+/* =========================================================================
+   ANIMATIONS SUITE
+   ========================================================================= */
+
+/* 1. Page Entrance Transition */
+@keyframes pageFadeSlide {
+  0% {
+    opacity: 0;
+    transform: translateY(12px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.page-transition-enter {
+  animation: pageFadeSlide 0.4s var(--transition-bounce) forwards;
+}
+
+/* 2. Fade In & Fade Out */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.fade-in { animation: fadeIn 0.3s ease-out forwards; }
+.fade-out { animation: fadeOut 0.3s ease-in forwards; }
+
+/* 3. Directional Slides */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideLeft {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideRight {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.slide-up { animation: slideUp 0.4s var(--transition-bounce) forwards; }
+.slide-down { animation: slideDown 0.4s var(--transition-bounce) forwards; }
+.slide-left { animation: slideLeft 0.4s var(--transition-bounce) forwards; }
+.slide-right { animation: slideRight 0.4s var(--transition-bounce) forwards; }
+
+/* 4. Scale & Entrance */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.scale-in { animation: scaleIn 0.35s var(--transition-bounce) forwards; }
+
+/* 5. Floating Background Blobs Animation */
+@keyframes blobFloat {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-25px) rotate(12deg) scale(1.08);
+  }
+}
+
+.blob-floating {
+  animation: blobFloat 8s ease-in-out infinite;
+}
+
+/* 6. Skeleton Loader Shimmer */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--bg-secondary-surface) 25%,
+    var(--border-color) 37%,
+    var(--bg-secondary-surface) 63%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: var(--border-radius-sm);
+}
+
+/* 7. Spinner */
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 250px;
+  width: 100%;
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border: 3.5px solid var(--border-color);
+  border-top-color: var(--primary);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Mobile Responsiveness Overlay */
+.sidebar-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(2, 6, 23, 0.65);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@media (max-width: 992px) {
+  .main-content {
+    margin-left: 0 !important;
+  }
+  .page-container {
+    padding: 20px 16px;
+  }
+}
