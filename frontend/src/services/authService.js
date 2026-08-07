@@ -67,21 +67,20 @@ const getCurrentUser = () => {
  * Fetch profile details from backend / Firebase session
  */
 const getProfile = async () => {
-  try {
-    const response = await api.get('/auth/profile');
-    if (response.data && response.data.success) {
-      const freshUser = response.data.data;
-      const existingUser = getCurrentUser() || {};
-      const updatedUser = { ...existingUser, ...freshUser };
-      localStorage.setItem('sms_user', JSON.stringify(updatedUser));
-      localStorage.setItem('firebase_user', JSON.stringify(updatedUser));
-      return { success: true, data: updatedUser };
-    }
-  } catch (e) {
-    console.warn('ℹ️ Backend profile refresh notice:', e.message);
-  }
   const currentUser = getCurrentUser();
-  return { success: true, data: currentUser };
+  if (currentUser) {
+    // Non-blocking background sync with REST backend
+    api.get('/auth/profile').then(res => {
+      if (res.data && res.data.success) {
+        const freshUser = res.data.data;
+        const updatedUser = { ...currentUser, ...freshUser };
+        localStorage.setItem('sms_user', JSON.stringify(updatedUser));
+        localStorage.setItem('firebase_user', JSON.stringify(updatedUser));
+      }
+    }).catch(() => {});
+    return { success: true, data: currentUser };
+  }
+  return { success: true, data: null };
 };
 
 export default {

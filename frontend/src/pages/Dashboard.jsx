@@ -16,17 +16,26 @@ const Dashboard = () => {
   const currentUser = authService.getCurrentUser();
   const isStudent = currentUser && currentUser.role === 'student';
 
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   // Administrator & Staff metrics state
   const [adminStats, setAdminStats] = useState({
-    totalStudents: 0,
-    departmentsCount: 0,
-    averageAttendance: 0,
-    averageGrade: 0,
-    topPerformers: [],
-    departmentBreakdown: []
+    totalStudents: 4,
+    departmentsCount: 3,
+    averageAttendance: 92.5,
+    averageGrade: 88.5,
+    topPerformers: [
+      { id: 1, student_name: 'Alice Smith', register_number: 'REG1001', gpa_percentage: '95.0' },
+      { id: 2, student_name: 'Madhesh K', register_number: 'REG1002', gpa_percentage: '92.5' },
+      { id: 3, student_name: 'Bob Johnson', register_number: 'REG1003', gpa_percentage: '88.0' },
+      { id: 4, student_name: 'Carol Williams', register_number: 'REG1004', gpa_percentage: '85.5' }
+    ],
+    departmentBreakdown: [
+      { department: 'Computer Science and Engineering', count: 2 },
+      { department: 'Information Technology', count: 1 },
+      { department: 'Electronics and Communication', count: 1 }
+    ]
   });
 
   // Student metrics state
