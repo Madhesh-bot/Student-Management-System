@@ -1,9 +1,19 @@
 import axios from 'axios';
 
+const getBaseURL = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  if (typeof window !== 'undefined' && !window.location.hostname.includes('localhost') && !window.location.hostname.includes('127.0.0.1')) {
+    return 'https://student-management-api.onrender.com/api';
+  }
+  return '/api';
+};
+
 // Create base axios instance
 const api = axios.create({
-  baseURL: '/api', // Proxied by Vite dev server to Express (http://localhost:5000)
-  timeout: 10000,
+  baseURL: getBaseURL(),
+  timeout: 5000,
   headers: {
     'Content-Type': 'application/json',
   },

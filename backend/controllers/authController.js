@@ -119,6 +119,19 @@ const loginUser = async (req, res, next) => {
       user = await userModel.findUserByEmailOrRegisterNumber(cleanEmailOrIdentifier);
     }
 
+    // Auto-create admin123@gmail.com if missing from MySQL DB
+    if (!user && cleanEmailOrIdentifier === 'admin123@gmail.com' && cleanPassword === '123456') {
+      const hashedPassword = await hash('123456');
+      user = await userModel.createUser({
+        name: 'Administrator',
+        email: 'admin123@gmail.com',
+        password: hashedPassword,
+        role: 'admin',
+        role_id: 1
+      });
+      user.role = 'admin';
+    }
+
     if (!user) {
       return errorResponse(res, 'User profile not found in database', 404);
     }

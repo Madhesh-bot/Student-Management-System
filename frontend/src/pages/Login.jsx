@@ -19,7 +19,7 @@ const Login = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'staff',
+    role: 'student',
     register_number: '',
     department: '',
     year: '1',
