@@ -93,10 +93,26 @@ export const firebaseAuthService = {
         return { success: true, user: userSession };
       }
 
-      // 2. Hybrid Session fallback for sub-200ms instant authentication
-      const isTargetAdmin = email === 'admin123@gmail.com' || email === 'admin@sms.com' || email.includes('admin');
-      const userRole = isTargetAdmin ? 'admin' : 'student';
-      const userName = isTargetAdmin ? 'Administrator' : email.split('@')[0];
+      // 2. Lookup persistent user account registry or fallback role
+      let userRole = 'student';
+      let userName = email.split('@')[0];
+
+      try {
+        const userRegistry = JSON.parse(localStorage.getItem('sms_user_accounts') || '{}');
+        const match = userRegistry[email] || Object.values(userRegistry).find(u => u.email?.toLowerCase() === email || u.name?.toLowerCase() === email);
+        if (match && match.role) {
+          userRole = match.role.toLowerCase();
+          userName = match.name || userName;
+        } else if (email.includes('admin')) {
+          userRole = 'admin';
+          userName = 'Administrator';
+        } else if (email.includes('staff') || email.includes('sughasini')) {
+          userRole = 'staff';
+          userName = 'Staff Member';
+        }
+      } catch (e) {}
+
+      const isTargetAdmin = userRole === 'admin';
       const userToken = 'SMS_SESSION_TOKEN_' + Date.now();
 
       const userSession = {
@@ -230,6 +246,19 @@ export const firebaseAuthService = {
       token: jwtToken,
       ...regExtra
     };
+
+    // Save account into user accounts registry for persistent login lookup
+    try {
+      const userRegistry = JSON.parse(localStorage.getItem('sms_user_accounts') || '{}');
+      userRegistry[cleanEmail] = {
+        name: cleanName,
+        email: cleanEmail,
+        role: regRole.toLowerCase(),
+        firebase_uid: firebaseUid,
+        extra: regExtra
+      };
+      localStorage.setItem('sms_user_accounts', JSON.stringify(userRegistry));
+    } catch (e) {}
 
     // Save session locally
     localStorage.setItem('sms_token', jwtToken);
