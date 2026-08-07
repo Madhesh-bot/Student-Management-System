@@ -54,14 +54,20 @@ export const firebaseAuthService = {
       let firebaseUser = null;
       let firebaseUid = null;
 
-      // 1. Attempt Firebase Auth if identifier is an email address
+      // 1. Attempt Firebase Auth with a 2.5s timeout race to prevent UI hanging
       if (email && email.includes('@')) {
         try {
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Firebase Auth timeout')), 2500)
+          );
+          const userCredential = await Promise.race([
+            signInWithEmailAndPassword(auth, email, password),
+            timeoutPromise
+          ]);
           firebaseUser = userCredential.user;
           firebaseUid = firebaseUser.uid;
         } catch (fbAuthErr) {
-          console.warn('ℹ️ Firebase Auth sign-in notice:', fbAuthErr.message);
+          console.warn('ℹ️ Firebase Auth sign-in notice (falling back to MySQL):', fbAuthErr.message);
         }
       }
 

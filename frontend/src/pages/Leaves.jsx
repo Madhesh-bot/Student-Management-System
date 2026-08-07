@@ -25,7 +25,12 @@ const Leaves = () => {
       setLoading(true);
       setError(null);
       const res = await leaveService.getLeaves();
-      setLeaves(res.data || []);
+      const list = Array.isArray(res.data?.data)
+        ? res.data.data
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+      setLeaves(list);
     } catch (err) {
       console.error(err);
       setError('Failed to retrieve leave records.');
@@ -156,8 +161,8 @@ const Leaves = () => {
                           </span>
                         </td>
                       )}
-                      <td>{new Date(leave.start_date).toLocaleDateString()}</td>
-                      <td>{new Date(leave.end_date).toLocaleDateString()}</td>
+                      <td>{leave.start_date ? new Date(leave.start_date).toLocaleDateString() : 'N/A'}</td>
+                      <td>{leave.end_date ? new Date(leave.end_date).toLocaleDateString() : 'N/A'}</td>
                       <td>{leave.reason}</td>
                       <td>
                         <span className={`badge badge-${
