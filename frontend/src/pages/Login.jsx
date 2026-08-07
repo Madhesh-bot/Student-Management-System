@@ -49,6 +49,30 @@ const Login = () => {
     setError(null);
   };
 
+  const handleToggleMode = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    setIsRegistering((prev) => !prev);
+    setError(null);
+    setSuccess(null);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      role: 'student',
+      register_number: '',
+      department: '',
+      year: '1',
+      section: '',
+      gender: 'Male',
+      phone: '',
+      address: ''
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -144,7 +168,7 @@ const Login = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="login-form">
+        <form onSubmit={handleSubmit} className="login-form" autoComplete="off">
           
           {/* User Account Role Selection in Registration Mode */}
           {isRegistering && (
@@ -332,13 +356,7 @@ const Login = () => {
           <button
             type="button"
             className="mode-switch-btn"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsRegistering(!isRegistering);
-              setError(null);
-              setSuccess(null);
-            }}
+            onClick={handleToggleMode}
           >
             {isRegistering ? 'Sign In' : 'Register New Account'}
           </button>
