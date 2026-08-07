@@ -10,7 +10,7 @@ const Leaves = () => {
   const isStudent = currentUser && currentUser.role === 'student';
 
   const [leaves, setLeaves] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'form'
@@ -22,7 +22,6 @@ const Leaves = () => {
 
   const fetchLeaves = async () => {
     try {
-      setLoading(true);
       setError(null);
       const res = await leaveService.getLeaves();
       const list = Array.isArray(res.data?.data)

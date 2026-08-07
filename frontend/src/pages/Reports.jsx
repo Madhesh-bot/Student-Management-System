@@ -10,7 +10,7 @@ import Input from '../components/Input';
  */
 const Reports = () => {
   const [activeTab, setActiveTab] = useState('student-list'); // 'student-list', 'demographics', 'attendance', 'grades'
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
   // Data sets
@@ -32,7 +32,6 @@ const Reports = () => {
 
   const fetchAllReports = async () => {
     try {
-      setLoading(true);
       setError(null);
 
       // Fetch all reports and full student profiles list in parallel (unpaginated list for exporting/printing)

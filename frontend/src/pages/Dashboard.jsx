@@ -53,7 +53,6 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        setLoading(true);
         setError(null);
 
         if (isStudent) {

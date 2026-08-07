@@ -20,7 +20,7 @@ const Marks = () => {
 
   const [viewMode, setViewMode] = useState('mark'); 
   const [subject, setSubject] = useState('Data Structures and Algorithms');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -44,7 +44,6 @@ const Marks = () => {
 
   const loadAllData = async () => {
     try {
-      setLoading(true);
       setError(null);
       setSuccess(null);
 

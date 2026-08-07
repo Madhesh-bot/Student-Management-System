@@ -12,7 +12,7 @@ const Academic = () => {
 
   const [departments, setDepartments] = useState([]);
   const [subjects, setSubjects] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -27,7 +27,6 @@ const Academic = () => {
 
   const loadData = async () => {
     try {
-      setLoading(true);
       setError(null);
       const [deptRes, subjRes] = await Promise.all([
         departmentService.getDepartments(),

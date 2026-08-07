@@ -12,7 +12,7 @@ import authService from '../services/authService';
 const Students = () => {
   const currentUser = authService.getCurrentUser();
   const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
   // Search state
@@ -46,7 +46,6 @@ const Students = () => {
 
   const fetchStudents = async (pageNumber = 1) => {
     try {
-      setLoading(true);
       setError(null);
       const res = await studentService.getAllStudents(pageNumber, 10);
       const studentList = Array.isArray(res) ? res : (res?.data || res?.students || []);

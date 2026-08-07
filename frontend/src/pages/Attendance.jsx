@@ -17,7 +17,7 @@ const Attendance = () => {
 
   const [viewMode, setViewMode] = useState('mark'); 
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
@@ -31,7 +31,6 @@ const Attendance = () => {
 
   const loadAllData = async () => {
     try {
-      setLoading(true);
       setError(null);
       setSuccess(null);
 
