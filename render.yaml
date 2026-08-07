@@ -1,4 +1,4 @@
-# Render Blueprint Specification (100% Free Plan)
+# Render Blueprint Specification
 # Deploy directly at https://dashboard.render.com/blueprints
 
 services:
@@ -27,11 +27,10 @@ services:
       - key: DB_NAME
         value: "student_management"
 
-  # 2. Vite React Frontend Static Site (Free Tier)
+  # 2. Vite React Frontend Static Site
   - type: web
     name: student-management-ui
     env: static
-    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     routes:
