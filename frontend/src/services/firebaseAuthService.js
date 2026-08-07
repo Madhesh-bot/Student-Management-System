@@ -49,7 +49,10 @@ export const firebaseAuthService = {
    * Hybrid Sign-In: Firebase Auth Verification + MySQL Profile Retrieval
    * Supports email address, register number, and Firebase UID authentication.
    */
-  login: async (email, password) => {
+  login: async (rawEmail, rawPassword) => {
+    const email = rawEmail ? rawEmail.trim().toLowerCase() : '';
+    const password = rawPassword ? rawPassword.trim() : '';
+
     try {
       let mysqlUserData = null;
       let jwtToken = null;
@@ -91,10 +94,10 @@ export const firebaseAuthService = {
         return { success: true, user: userSession };
       }
 
-      // If backend failed, throw formatted error
+      // If backend failed, throw backend error message directly
       if (backendError) {
-        const friendlyMessage = formatFirebaseError(backendError);
-        throw new Error(friendlyMessage);
+        const msg = backendError.response?.data?.message || backendError.message;
+        throw new Error(msg || 'Invalid email or password');
       }
 
       throw new Error('Invalid email or password');
@@ -107,25 +110,18 @@ export const firebaseAuthService = {
 
   /**
    * Hybrid Registration: Firebase Auth Creation -> MySQL Insertion -> Firestore Backup
-   * Supports parameter order auto-detection (email, password, name OR name, email, password).
    */
-  register: async (arg1, arg2, arg3, role = 'student', extraFields = {}) => {
-    let email, password, name;
+  register: async (name, email, password, role = 'student', extraFields = {}) => {
+    // Support object options or positional parameters cleanly
+    let regName = typeof name === 'object' ? name.name : name;
+    let regEmail = typeof name === 'object' ? name.email : email;
+    let regPassword = typeof name === 'object' ? name.password : password;
+    let regRole = typeof name === 'object' ? name.role || role : role;
+    let regExtra = typeof name === 'object' ? name : extraFields;
 
-    // Auto-detect argument order
-    if (typeof arg1 === 'string' && arg1.includes('@')) {
-      email = arg1.trim();
-      password = arg2;
-      name = arg3 || email.split('@')[0];
-    } else if (typeof arg2 === 'string' && arg2.includes('@')) {
-      name = arg1;
-      email = arg2.trim();
-      password = arg3;
-    } else {
-      name = arg1;
-      email = arg2;
-      password = arg3;
-    }
+    const cleanEmail = regEmail ? regEmail.trim().toLowerCase() : '';
+    const cleanPassword = regPassword ? regPassword.trim() : '';
+    const cleanName = regName ? regName.trim() : cleanEmail.split('@')[0];
 
     let userCredential = null;
     let firebaseUser = null;
@@ -138,7 +134,7 @@ export const firebaseAuthService = {
           setTimeout(() => reject(new Error('Firebase registration timeout')), 3000)
         );
         userCredential = await Promise.race([
-          createUserWithEmailAndPassword(auth, email, password),
+          createUserWithEmailAndPassword(auth, cleanEmail, cleanPassword),
           timeoutPromise
         ]);
         firebaseUser = userCredential.user;
@@ -155,11 +151,11 @@ export const firebaseAuthService = {
       try {
         const response = await api.post('/auth/register', {
           firebase_uid: firebaseUid,
-          name,
-          email,
-          password,
-          role,
-          ...extraFields
+          name: cleanName,
+          email: cleanEmail,
+          password: cleanPassword,
+          role: regRole,
+          ...regExtra
         });
 
         if (response.data && response.data.success) {
@@ -177,23 +173,24 @@ export const firebaseAuthService = {
             console.error('⚠️ Rollback Warning:', rollbackErr.message);
           }
         }
-        throw new Error(backendErr.response?.data?.message || backendErr.message || 'MySQL database user registration failed');
+        const errMsg = backendErr.response?.data?.message || backendErr.message || 'MySQL database user registration failed';
+        throw new Error(errMsg);
       }
 
       // 3. Store user metadata in Firestore 'users' collection (non-blocking)
       const userProfile = {
         uid: firebaseUid,
         firebase_uid: firebaseUid,
-        email: email.toLowerCase(),
-        name,
-        role: role.toLowerCase(),
-        register_number: extraFields.register_number || '',
-        department: extraFields.department || '',
-        year: extraFields.year || '',
-        section: extraFields.section || '',
-        gender: extraFields.gender || '',
-        phone: extraFields.phone || '',
-        address: extraFields.address || '',
+        email: cleanEmail,
+        name: cleanName,
+        role: regRole.toLowerCase(),
+        register_number: regExtra.register_number || '',
+        department: regExtra.department || '',
+        year: regExtra.year || '',
+        section: regExtra.section || '',
+        gender: regExtra.gender || '',
+        phone: regExtra.phone || '',
+        address: regExtra.address || '',
         createdAt: serverTimestamp()
       };
 
@@ -201,19 +198,19 @@ export const firebaseAuthService = {
         console.warn('ℹ️ Firestore backup doc creation notice:', err.message);
       });
 
-      if (role.toLowerCase() === 'student') {
+      if (regRole.toLowerCase() === 'student') {
         setDoc(doc(db, 'students', firebaseUid), {
           uid: firebaseUid,
           firebase_uid: firebaseUid,
-          name,
-          email: email.toLowerCase(),
-          register_number: extraFields.register_number || '',
-          department: extraFields.department || '',
-          year: extraFields.year || '1',
-          section: extraFields.section || 'A',
-          gender: extraFields.gender || 'Male',
-          phone: extraFields.phone || '',
-          address: extraFields.address || '',
+          name: cleanName,
+          email: cleanEmail,
+          register_number: regExtra.register_number || '',
+          department: regExtra.department || '',
+          year: regExtra.year || '1',
+          section: regExtra.section || 'A',
+          gender: regExtra.gender || 'Male',
+          phone: regExtra.phone || '',
+          address: regExtra.address || '',
           createdAt: serverTimestamp()
         }).catch(err => {
           console.warn('ℹ️ Firestore student doc creation notice:', err.message);
@@ -225,9 +222,9 @@ export const firebaseAuthService = {
         ...mysqlUserData,
         uid: firebaseUid,
         firebase_uid: firebaseUid,
-        email: email.toLowerCase(),
-        name,
-        role: role.toLowerCase(),
+        email: cleanEmail,
+        name: cleanName,
+        role: regRole.toLowerCase(),
         token: idToken
       };
 

@@ -19,6 +19,7 @@ const registerUser = async (req, res, next) => {
       password, 
       role = 'staff', 
       register_number, 
+      department,
       department_id = 1, 
       year = 1, 
       section = 'A', 
@@ -27,35 +28,44 @@ const registerUser = async (req, res, next) => {
       address 
     } = req.body;
 
+    const cleanEmail = email ? email.trim().toLowerCase() : '';
+    const cleanPassword = password ? password.trim() : '';
+    const cleanName = name ? name.trim() : cleanEmail.split('@')[0];
+
+    if (!cleanEmail || !cleanPassword) {
+      return errorResponse(res, 'Email and password are required', 400);
+    }
+
     // Check user exists in MySQL
-    const userExists = await userModel.findUserByEmail(email);
+    const userExists = await userModel.findUserByEmail(cleanEmail);
     if (userExists) {
       return errorResponse(res, 'A user account already exists in MySQL with this email address', 400);
     }
 
-    const hashedPassword = await hash(password);
+    const hashedPassword = await hash(cleanPassword);
     const newUser = await userModel.createUser({
       firebase_uid,
-      name,
-      email,
+      name: cleanName,
+      email: cleanEmail,
       password: hashedPassword,
       role
     });
 
     if (role === 'student') {
-      if (!register_number) {
+      const cleanRegNum = register_number ? register_number.trim() : null;
+      if (!cleanRegNum) {
         return errorResponse(res, 'Register number is required for student registration', 400);
       }
       await studentModel.addStudent({
         user_id: newUser.id,
         firebase_uid,
-        register_number,
-        student_name: name,
-        department_id,
-        year,
+        register_number: cleanRegNum,
+        student_name: cleanName,
+        department_id: Number(department_id) || 1,
+        year: Number(year) || 1,
         section,
         gender,
-        email,
+        email: cleanEmail,
         phone,
         address
       });
@@ -70,7 +80,7 @@ const registerUser = async (req, res, next) => {
       action: 'USER_REGISTER',
       entity: 'users',
       entityId: newUser.id,
-      newValues: { firebase_uid, name, email, role },
+      newValues: { firebase_uid, name: cleanName, email: cleanEmail, role },
       ipAddress: req.ip
     });
 
@@ -98,12 +108,15 @@ const loginUser = async (req, res, next) => {
       return errorResponse(res, 'Please provide email/register number or firebase_uid', 400);
     }
 
+    const cleanEmailOrIdentifier = email ? email.trim().toLowerCase() : null;
+    const cleanPassword = password ? password.trim() : null;
+
     let user = null;
     if (firebase_uid) {
       user = await userModel.findUserByFirebaseUid(firebase_uid);
     }
-    if (!user && email) {
-      user = await userModel.findUserByEmailOrRegisterNumber(email);
+    if (!user && cleanEmailOrIdentifier) {
+      user = await userModel.findUserByEmailOrRegisterNumber(cleanEmailOrIdentifier);
     }
 
     if (!user) {
@@ -111,8 +124,8 @@ const loginUser = async (req, res, next) => {
     }
 
     // Verify password if provided
-    if (password) {
-      const isMatch = await compare(password, user.password);
+    if (cleanPassword) {
+      const isMatch = await compare(cleanPassword, user.password);
       if (!isMatch) {
         return errorResponse(res, 'Invalid credentials provided', 401);
       }

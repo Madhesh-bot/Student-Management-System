@@ -79,7 +79,11 @@ const Login = () => {
     setError(null);
     setSuccess(null);
 
-    if (isRegistering && formData.password !== formData.confirmPassword) {
+    const cleanEmail = formData.email ? formData.email.trim() : '';
+    const cleanPassword = formData.password ? formData.password.trim() : '';
+    const cleanName = formData.name ? formData.name.trim() : cleanEmail.split('@')[0];
+
+    if (isRegistering && cleanPassword !== (formData.confirmPassword ? formData.confirmPassword.trim() : '')) {
       setError('Passwords do not match');
       setLoading(false);
       return;
@@ -89,12 +93,12 @@ const Login = () => {
       if (isRegistering) {
         if (formData.role === 'student') {
           await authService.register(
-            formData.name,
-            formData.email,
-            formData.password,
+            cleanName,
+            cleanEmail,
+            cleanPassword,
             formData.role,
             {
-              register_number: formData.register_number,
+              register_number: formData.register_number ? formData.register_number.trim() : '',
               department: formData.department,
               year: formData.year,
               section: formData.section,
@@ -105,16 +109,16 @@ const Login = () => {
           );
         } else {
           await authService.register(
-            formData.name,
-            formData.email,
-            formData.password,
+            cleanName,
+            cleanEmail,
+            cleanPassword,
             formData.role
           );
         }
         setSuccess('Registration successful! Logging in...');
         navigate('/');
       } else {
-        await authService.login(formData.email, formData.password);
+        await authService.login(cleanEmail, cleanPassword);
         navigate('/');
       }
     } catch (err) {

@@ -5,12 +5,13 @@ const db = require('../config/db');
  */
 const userModel = {
   findUserByEmail: async (email) => {
+    const cleanEmail = email ? email.trim() : '';
     const rows = await db.query(
       `SELECT u.*, r.role_name AS role 
        FROM users u 
        JOIN roles r ON u.role_id = r.id 
        WHERE u.email = ? AND u.deleted_at IS NULL`,
-      [email]
+      [cleanEmail]
     );
     return rows[0] || null;
   },
@@ -38,13 +39,14 @@ const userModel = {
   },
 
   findUserByEmailOrRegisterNumber: async (identifier) => {
+    const cleanId = identifier ? identifier.trim() : '';
     // Check direct email
     let rows = await db.query(
       `SELECT u.*, r.role_name AS role 
        FROM users u 
        JOIN roles r ON u.role_id = r.id 
        WHERE (u.email = ? OR u.firebase_uid = ?) AND u.deleted_at IS NULL`,
-      [identifier, identifier]
+      [cleanId, cleanId]
     );
     if (rows.length > 0) return rows[0];
 
@@ -55,7 +57,7 @@ const userModel = {
        JOIN roles r ON u.role_id = r.id 
        JOIN students s ON s.user_id = u.id 
        WHERE s.register_number = ? AND u.deleted_at IS NULL AND s.deleted_at IS NULL`,
-      [identifier]
+      [cleanId]
     );
     return rows[0] || null;
   },
