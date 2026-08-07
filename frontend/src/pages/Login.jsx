@@ -274,6 +274,7 @@ const Login = () => {
             label={isRegistering ? 'Email Address' : 'Email or Register Number'}
             name="email"
             type="text"
+            autoComplete="off"
             placeholder={isRegistering ? 'e.g. user@institution.edu' : 'e.g. user@institution.edu or REG1001'}
             value={formData.email}
             onChange={handleChange}
@@ -286,6 +287,7 @@ const Login = () => {
               label="Password"
               name="password"
               type={showPassword ? 'text' : 'password'}
+              autoComplete="new-password"
               placeholder="••••••••"
               value={formData.password}
               onChange={handleChange}

@@ -51,38 +51,13 @@ export const firebaseAuthService = {
    */
   login: async (email, password) => {
     try {
-      let firebaseUser = null;
-      let firebaseUid = null;
-
-      // 1. Attempt Firebase Auth with a 2.5s timeout race to prevent UI hanging
-      if (email && email.includes('@')) {
-        try {
-          const timeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Firebase Auth timeout')), 2500)
-          );
-          const userCredential = await Promise.race([
-            signInWithEmailAndPassword(auth, email, password),
-            timeoutPromise
-          ]);
-          firebaseUser = userCredential.user;
-          firebaseUid = firebaseUser.uid;
-        } catch (fbAuthErr) {
-          console.warn('ℹ️ Firebase Auth sign-in notice (falling back to MySQL):', fbAuthErr.message);
-        }
-      }
-
-      // 2. Load profile and JWT token from MySQL backend
       let mysqlUserData = null;
       let jwtToken = null;
       let backendError = null;
 
+      // 1. Authenticate against MySQL backend FIRST for instant response
       try {
-        const response = await api.post('/auth/login', {
-          email,
-          password,
-          firebase_uid: firebaseUid
-        });
-
+        const response = await api.post('/auth/login', { email, password });
         if (response.data && response.data.success) {
           const { token, ...userData } = response.data.data;
           mysqlUserData = userData;
@@ -92,67 +67,39 @@ export const firebaseAuthService = {
         backendError = err;
       }
 
-      // If MySQL failed and no Firebase user was authenticated, throw clean error
-      if (!mysqlUserData && !firebaseUser) {
-        if (backendError) throw backendError;
-        throw new Error('Invalid email or password');
+      // 2. Non-blocking Firebase Auth sync in background
+      if (email && email.includes('@')) {
+        signInWithEmailAndPassword(auth, email, password).catch((fbErr) => {
+          console.warn('ℹ️ Firebase Auth background notice:', fbErr.message);
+        });
       }
 
-      // 3. Fall back to Firestore profile if MySQL user profile wasn't returned
-      if (!mysqlUserData && firebaseUser) {
-        try {
-          const userDocRef = doc(db, 'users', firebaseUid);
-          const userDocSnap = await getDoc(userDocRef);
+      // If MySQL backend authenticated successfully, return user session immediately
+      if (mysqlUserData && jwtToken) {
+        const idToken = jwtToken;
+        const userSession = {
+          ...mysqlUserData,
+          uid: mysqlUserData.firebase_uid || mysqlUserData.id,
+          firebase_uid: mysqlUserData.firebase_uid || mysqlUserData.id,
+          token: idToken
+        };
 
-          const profileData = userDocSnap.exists()
-            ? userDocSnap.data()
-            : { 
-                uid: firebaseUid,
-                role: 'student', 
-                email: firebaseUser.email, 
-                name: firebaseUser.displayName || firebaseUser.email.split('@')[0] 
-              };
+        localStorage.setItem('sms_token', idToken);
+        localStorage.setItem('sms_user', JSON.stringify(userSession));
+        localStorage.setItem('firebase_user', JSON.stringify(userSession));
 
-          mysqlUserData = {
-            id: firebaseUid,
-            firebase_uid: firebaseUid,
-            email: firebaseUser.email,
-            name: profileData.name || firebaseUser.email.split('@')[0],
-            role: profileData.role || 'student',
-            register_number: profileData.register_number || '',
-            department: profileData.department || '',
-            year: profileData.year || '',
-            section: profileData.section || '',
-            phone: profileData.phone || '',
-            address: profileData.address || ''
-          };
-        } catch (fsErr) {
-          mysqlUserData = {
-            id: firebaseUid,
-            firebase_uid: firebaseUid,
-            email: firebaseUser.email,
-            name: firebaseUser.email.split('@')[0],
-            role: 'student'
-          };
-        }
+        return { success: true, user: userSession };
       }
 
-      const idToken = jwtToken || (firebaseUser ? await getIdToken(firebaseUser, true) : 'MOCK_TOKEN');
-      const userSession = {
-        ...mysqlUserData,
-        uid: firebaseUid || mysqlUserData.firebase_uid || mysqlUserData.id,
-        firebase_uid: firebaseUid || mysqlUserData.firebase_uid || mysqlUserData.id,
-        token: idToken
-      };
+      // If backend failed, throw formatted error
+      if (backendError) {
+        const friendlyMessage = formatFirebaseError(backendError);
+        throw new Error(friendlyMessage);
+      }
 
-      // Persist session to localStorage for app-wide compatibility
-      localStorage.setItem('sms_token', idToken);
-      localStorage.setItem('sms_user', JSON.stringify(userSession));
-      localStorage.setItem('firebase_user', JSON.stringify(userSession));
-
-      return { success: true, user: userSession };
+      throw new Error('Invalid email or password');
     } catch (error) {
-      console.error('🔥 Firebase / MySQL Login Error:', error);
+      console.error('🔥 Login Error:', error);
       const friendlyMessage = formatFirebaseError(error);
       throw new Error(friendlyMessage);
     }
