@@ -262,6 +262,32 @@
   font-weight: 800;
   font-size: 1.35rem;
   letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .navbar {
+    padding: 0 12px !important;
+    height: 60px !important;
+  }
+  .navbar-brand {
+    font-size: 1.05rem !important;
+    white-space: nowrap !important;
+  }
+  .navbar-brand span {
+    white-space: nowrap !important;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+    display: inline-block;
+  }
+}
+
+@media (max-width: 480px) {
+  .navbar-brand span {
+    max-width: 150px;
+    font-size: 0.95rem !important;
+  }
 }
 
 .navbar-actions {
