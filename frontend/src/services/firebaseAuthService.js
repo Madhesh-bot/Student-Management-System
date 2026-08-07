@@ -57,32 +57,12 @@ export const firebaseAuthService = {
       throw new Error('Please enter both email/register number and password');
     }
 
-    // Direct Administrator bypass check for admin123@gmail.com
-    if ((email === 'admin123@gmail.com' || email === 'admin@sms.com') && password === '123456') {
-      const adminSession = {
-        id: 1,
-        firebase_uid: 'admin_uid_123',
-        uid: 'admin_uid_123',
-        name: 'Administrator',
-        email: email,
-        role: 'admin',
-        token: 'ADMIN_SUPER_SESSION_TOKEN'
-      };
-      localStorage.setItem('sms_token', adminSession.token);
-      localStorage.setItem('sms_user', JSON.stringify(adminSession));
-      localStorage.setItem('firebase_user', JSON.stringify(adminSession));
-
-      // Attempt background backend sync silently
-      api.post('/auth/login', { email, password }).catch(() => {});
-      return { success: true, user: adminSession };
-    }
-
     try {
       let mysqlUserData = null;
       let jwtToken = null;
       let backendError = null;
 
-      // 1. Authenticate against REST backend FIRST (5s timeout max)
+      // 1. Authenticate against REST backend FIRST to fetch real database user profile
       try {
         const response = await api.post('/auth/login', { email, password });
         if (response.data && response.data.success) {
@@ -94,13 +74,16 @@ export const firebaseAuthService = {
         backendError = err;
       }
 
-      // If MySQL backend authenticated successfully, return user session immediately
+      // If MySQL backend authenticated successfully, save & return real database user profile
       if (mysqlUserData && jwtToken) {
         const idToken = jwtToken;
         const userSession = {
           ...mysqlUserData,
+          id: mysqlUserData.id,
           uid: mysqlUserData.firebase_uid || mysqlUserData.id,
           firebase_uid: mysqlUserData.firebase_uid || mysqlUserData.id,
+          name: mysqlUserData.name,
+          email: mysqlUserData.email,
           role: mysqlUserData.role || (email.includes('admin') ? 'admin' : 'student'),
           token: idToken
         };

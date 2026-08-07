@@ -267,7 +267,13 @@ const resetPassword = async (req, res, next) => {
  */
 const getUserProfile = async (req, res, next) => {
   try {
-    const user = await userModel.findUserById(req.user.id);
+    let user = req.user?.id ? await userModel.findUserById(req.user.id) : null;
+    if (!user && req.user?.email) {
+      user = await userModel.findUserByEmail(req.user.email);
+    }
+    if (!user) {
+      return errorResponse(res, 'User profile not found', 404);
+    }
     return successResponse(res, 'Profile retrieved successfully', user);
   } catch (error) {
     next(error);
