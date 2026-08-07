@@ -49,11 +49,16 @@ const Students = () => {
       setLoading(true);
       setError(null);
       const res = await studentService.getAllStudents(pageNumber, 10);
-      setStudents(res.data);
-      if (res.pagination) {
+      const studentList = Array.isArray(res) ? res : (res?.data || res?.students || []);
+      setStudents(studentList);
+      if (res && res.pagination) {
         setTotalPages(res.pagination.totalPages || 1);
         setCurrentPage(res.pagination.page || 1);
-        setTotalStudents(res.pagination.total || 0);
+        setTotalStudents(res.pagination.total || studentList.length);
+      } else {
+        setTotalPages(1);
+        setCurrentPage(1);
+        setTotalStudents(studentList.length);
       }
     } catch (err) {
       console.error(err);
