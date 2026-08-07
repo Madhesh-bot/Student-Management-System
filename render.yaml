@@ -1,11 +1,12 @@
-# Render Blueprint Specification
+# Render Blueprint Specification (100% Free Plan)
 # Deploy directly at https://dashboard.render.com/blueprints
 
 services:
-  # 1. Express Backend Web Service
+  # 1. Express Backend Web Service (Free Tier)
   - type: web
     name: student-management-api
     env: node
+    plan: free
     buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
     envVars:
@@ -26,10 +27,11 @@ services:
       - key: DB_NAME
         value: "student_management"
 
-  # 2. Vite React Frontend Static Site
+  # 2. Vite React Frontend Static Site (Free Tier)
   - type: web
     name: student-management-ui
     env: static
+    plan: free
     buildCommand: cd frontend && npm install && npm run build
     staticPublishPath: ./frontend/dist
     routes:
