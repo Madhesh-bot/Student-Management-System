@@ -1,11 +1,12 @@
 import React, { useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import authService from '../services/authService';
 
 /**
  * Top Navbar Component with Debounced Toggle Controls
  */
 const Navbar = ({ onToggleSidebar, sidebarCollapsed, currentTheme, onToggleTheme }) => {
+  const navigate = useNavigate();
   const currentUser = authService.getCurrentUser();
   const lastSidebarClickRef = useRef(0);
   const lastThemeClickRef = useRef(0);
@@ -26,6 +27,15 @@ const Navbar = ({ onToggleSidebar, sidebarCollapsed, currentTheme, onToggleTheme
     if (now - lastThemeClickRef.current < 350) return;
     lastThemeClickRef.current = now;
     if (onToggleTheme) onToggleTheme();
+  };
+
+  const handleLogout = async (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    await authService.logout();
+    navigate('/login');
   };
 
   const getInitials = (name) => {
@@ -67,7 +77,7 @@ const Navbar = ({ onToggleSidebar, sidebarCollapsed, currentTheme, onToggleTheme
         </Link>
       </div>
 
-      <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+      <div className="navbar-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {/* Theme Toggle Button */}
         <button 
           type="button"
@@ -120,6 +130,35 @@ const Navbar = ({ onToggleSidebar, sidebarCollapsed, currentTheme, onToggleTheme
             </div>
           </Link>
         )}
+
+        {/* Prominent Header Logout Button for easy mobile access */}
+        <button
+          type="button"
+          onClick={handleLogout}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '7px 12px',
+            backgroundColor: 'rgba(239, 68, 68, 0.15)',
+            border: '1px solid rgba(239, 68, 68, 0.35)',
+            color: '#EF4444',
+            borderRadius: '8px',
+            cursor: 'pointer',
+            fontSize: '0.85rem',
+            fontWeight: '600',
+            transition: 'all 0.2s ease',
+            marginLeft: '4px'
+          }}
+          title="Log Out of your account"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Log Out</span>
+        </button>
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
