@@ -31,7 +31,6 @@ const Attendance = () => {
 
   const loadAllData = async () => {
     try {
-      setLoading(true);
       setError(null);
       setSuccess(null);
 

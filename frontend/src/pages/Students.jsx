@@ -46,7 +46,7 @@ const Students = () => {
 
   const fetchStudents = async (pageNumber = 1) => {
     try {
-      setLoading(true);
+      if (students.length === 0) setLoading(true);
       setError(null);
       const res = await studentService.getAllStudents(pageNumber, 10);
       const studentList = Array.isArray(res) ? res : (res?.data || res?.students || []);
