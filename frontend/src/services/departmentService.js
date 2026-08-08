@@ -10,7 +10,13 @@ const departmentService = {
   getDepartments: async () => {
     try {
       const res = await api.get('/departments');
-      if (res.data) return res.data;
+      if (res.data) {
+        const list = Array.isArray(res.data) ? res.data : (res.data.data || res.data.departments || []);
+        if (Array.isArray(list) && list.length > 0) {
+          localStorage.setItem('sms_departments', JSON.stringify(list));
+          return { success: true, data: list };
+        }
+      }
     } catch (e) {}
 
     const saved = localStorage.getItem('sms_departments');

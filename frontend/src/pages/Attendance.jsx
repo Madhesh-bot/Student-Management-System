@@ -31,6 +31,7 @@ const Attendance = () => {
 
   const loadAllData = async () => {
     try {
+      setLoading(true);
       setError(null);
       setSuccess(null);
 
@@ -40,7 +41,7 @@ const Attendance = () => {
           const meRes = await studentService.getStudentMe();
           studentProfile = meRes.data?.student || meRes.data;
         } catch (e) {
-          const studentsRes = await studentService.getAllStudents();
+          const studentsRes = await studentService.getAllStudents(1, 1000);
           const allStudents = studentsRes.data || [];
           setStudentsList(allStudents);
           studentProfile = allStudents.find(s => 
@@ -61,7 +62,7 @@ const Attendance = () => {
           setError('No corresponding student profile found for your login account.');
         }
       } else {
-        const studentsRes = await studentService.getAllStudents();
+        const studentsRes = await studentService.getAllStudents(1, 1000);
         const allStudents = studentsRes.data || [];
         setStudentsList(allStudents);
         await loadMarkingSheet(allStudents);
@@ -87,9 +88,9 @@ const Attendance = () => {
         const existingRecord = loggedRecords.find(r => r.student_id === student.id);
         return {
           student_id: student.id,
-          register_number: student.register_number,
-          student_name: student.student_name,
-          department: student.department,
+          register_number: student.register_number || student.reg_no || '',
+          student_name: student.student_name || student.name || 'Unknown Student',
+          department: student.department || student.dept_name || '',
           status: existingRecord ? existingRecord.status : 'Present',
           remarks: existingRecord ? (existingRecord.remarks || '') : '',
           record_id: existingRecord ? existingRecord.id : null
@@ -157,9 +158,10 @@ const Attendance = () => {
 
   const filteredMarkingList = attendanceList.filter(item => {
     const term = localSearch.toLowerCase();
-    return item.student_name.toLowerCase().includes(term) ||
-           item.register_number.toLowerCase().includes(term) ||
-           (item.department && item.department.toLowerCase().includes(term));
+    const sName = (item.student_name || item.name || '').toLowerCase();
+    const regNo = (item.register_number || item.reg_no || '').toLowerCase();
+    const dept = (item.department || item.dept_name || '').toLowerCase();
+    return sName.includes(term) || regNo.includes(term) || dept.includes(term);
   });
 
   return (

@@ -79,8 +79,10 @@ const Reports = () => {
   // Filter & Export logic: Tab 1 (Student List)
   // -------------------------------------------------------------
   const filteredStudents = allStudents.filter(s => {
-    const matchesSearch = s.student_name.toLowerCase().includes(studentSearch.toLowerCase()) || 
-                          s.register_number.toLowerCase().includes(studentSearch.toLowerCase());
+    const sName = (s.student_name || s.name || '').toLowerCase();
+    const regNo = (s.register_number || s.reg_no || '').toLowerCase();
+    const term = (studentSearch || '').toLowerCase();
+    const matchesSearch = sName.includes(term) || regNo.includes(term);
     const matchesDept = studentDeptFilter ? s.department === studentDeptFilter : true;
     const matchesYear = studentYearFilter ? String(s.year) === studentYearFilter : true;
     return matchesSearch && matchesDept && matchesYear;
@@ -92,16 +94,16 @@ const Reports = () => {
   const handleExportStudentList = () => {
     const headers = ['Register Number', 'Student Name', 'Department', 'Year', 'Section', 'Gender', 'Email', 'Phone', 'Address', 'Admission Date'];
     const rows = filteredStudents.map(s => [
-      s.register_number,
-      s.student_name,
-      s.department,
+      s.register_number || s.reg_no || '',
+      s.student_name || s.name || '',
+      s.department || s.dept_name || '',
       `${s.year} Year`,
-      s.section,
-      s.gender,
-      s.email,
+      s.section || 'A',
+      s.gender || '',
+      s.email || '',
       s.phone || '',
       s.address || '',
-      new Date(s.created_at).toLocaleDateString()
+      s.created_at ? new Date(s.created_at).toLocaleDateString() : ''
     ]);
     exportToCSV(headers, rows, 'student_list_report.csv');
   };
@@ -134,10 +136,12 @@ const Reports = () => {
   // -------------------------------------------------------------
   // Filter & Export logic: Tab 3 (Attendance)
   // -------------------------------------------------------------
-  const filteredAttendanceSummary = attendanceData?.studentSummary.filter(s => 
-    s.student_name.toLowerCase().includes(attendanceSearch.toLowerCase()) ||
-    s.register_number.toLowerCase().includes(attendanceSearch.toLowerCase())
-  ) || [];
+  const filteredAttendanceSummary = attendanceData?.studentSummary.filter(s => {
+    const sName = (s.student_name || s.name || '').toLowerCase();
+    const regNo = (s.register_number || s.reg_no || '').toLowerCase();
+    const term = (attendanceSearch || '').toLowerCase();
+    return sName.includes(term) || regNo.includes(term);
+  }) || [];
 
   const handleExportAttendance = () => {
     const headers = ['Student Name', 'Register Number', 'Department', 'Year', 'Section', 'Days Present', 'Days Absent', 'Days Late', 'Days Excused', 'Total Days', 'Attendance Rate'];

@@ -46,6 +46,7 @@ const Students = () => {
 
   const fetchStudents = async (pageNumber = 1) => {
     try {
+      setLoading(true);
       setError(null);
       const res = await studentService.getAllStudents(pageNumber, 10);
       const studentList = Array.isArray(res) ? res : (res?.data || res?.students || []);
@@ -274,13 +275,13 @@ const Students = () => {
             <tbody>
               {students.map((student) => (
                 <tr key={student.id}>
-                  <td style={{ fontWeight: '600' }}>{student.register_number}</td>
-                  <td>{student.student_name}</td>
-                  <td>{student.department}</td>
-                  <td>{student.year} Yr</td>
-                  <td>{student.section}</td>
-                  <td>{student.gender}</td>
-                  <td>{student.email}</td>
+                  <td style={{ fontWeight: '600' }}>{student.register_number || student.reg_no || 'N/A'}</td>
+                  <td>{student.student_name || student.name || 'Unknown Student'}</td>
+                  <td>{student.department || student.dept_name || 'General'}</td>
+                  <td>{student.year ? (String(student.year).includes('Year') ? student.year : `${student.year} Yr`) : '-'}</td>
+                  <td>{student.section || 'A'}</td>
+                  <td>{student.gender || '-'}</td>
+                  <td>{student.email || '-'}</td>
                   <td>{student.phone || '-'}</td>
                   
                   {/* Actions column for admin/staff */}

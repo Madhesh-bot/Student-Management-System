@@ -32,14 +32,18 @@ const Academic = () => {
         departmentService.getDepartments(),
         subjectService.getSubjects()
       ]);
-      setDepartments(deptRes.data.data || []);
-      setSubjects(subjRes.data.data || []);
 
-      if (deptRes.data.data && deptRes.data.data.length > 0) {
-        setSubjDept(deptRes.data.data[0].id.toString());
+      const deptList = Array.isArray(deptRes) ? deptRes : (deptRes?.data || deptRes?.data?.data || []);
+      const subjList = Array.isArray(subjRes) ? subjRes : (subjRes?.data || subjRes?.data?.data || []);
+
+      setDepartments(deptList);
+      setSubjects(subjList);
+
+      if (deptList.length > 0) {
+        setSubjDept(deptList[0].id.toString());
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error retrieving academic registry data:', err);
       setError('Failed to retrieve academic registry data.');
     } finally {
       setLoading(false);

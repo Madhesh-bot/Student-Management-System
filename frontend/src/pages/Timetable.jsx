@@ -41,18 +41,22 @@ const Timetable = () => {
         departmentService.getDepartments(),
         subjectService.getSubjects()
       ]);
-      setDepartments(deptRes.data.data || []);
-      setSubjects(subjRes.data.data || []);
 
-      if (deptRes.data.data && deptRes.data.data.length > 0) {
-        setSelectedDept(deptRes.data.data[0].id.toString());
-        setModalDept(deptRes.data.data[0].id.toString());
+      const deptList = Array.isArray(deptRes) ? deptRes : (deptRes?.data || deptRes?.data?.data || []);
+      const subjList = Array.isArray(subjRes) ? subjRes : (subjRes?.data || subjRes?.data?.data || []);
+
+      setDepartments(deptList);
+      setSubjects(subjList);
+
+      if (deptList.length > 0) {
+        setSelectedDept(deptList[0].id.toString());
+        setModalDept(deptList[0].id.toString());
       }
-      if (subjRes.data.data && subjRes.data.data.length > 0) {
-        setModalSubject(subjRes.data.data[0].id.toString());
+      if (subjList.length > 0) {
+        setModalSubject(subjList[0].id.toString());
       }
     } catch (err) {
-      console.error(err);
+      console.error('Error loading timetable metadata:', err);
       setError('Failed to load initial department/subject metadata.');
     } finally {
       setLoading(false);

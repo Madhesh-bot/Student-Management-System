@@ -56,41 +56,63 @@ const INITIAL_STUDENTS = [
   }
 ];
 
+export const normalizeStudent = (s) => {
+  if (!s) return null;
+  return {
+    ...s,
+    id: s.id || s.student_id || Date.now(),
+    register_number: s.register_number || s.reg_no || s.regNo || '',
+    student_name: s.student_name || s.name || s.full_name || 'Unknown Student',
+    department: s.department || s.dept_name || s.dept || 'General',
+    dept_code: s.dept_code || s.code || (s.department ? s.department.substring(0, 4).toUpperCase() : 'GEN'),
+    year: s.year ? (String(s.year).includes('Year') ? String(s.year) : `${s.year} Year`) : '1st Year',
+    section: s.section || 'A',
+    gender: s.gender || 'Male',
+    email: s.email || '',
+    phone: s.phone || '',
+    address: s.address || ''
+  };
+};
+
 const getStoredStudents = () => {
   const saved = localStorage.getItem('sms_students');
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        return parsed;
+        return parsed.map(normalizeStudent);
       }
     } catch (e) {}
   }
-  localStorage.setItem('sms_students', JSON.stringify(INITIAL_STUDENTS));
-  return INITIAL_STUDENTS;
+  const initialized = INITIAL_STUDENTS.map(normalizeStudent);
+  localStorage.setItem('sms_students', JSON.stringify(initialized));
+  return initialized;
 };
 
 const setStoredStudents = (list) => {
-  localStorage.setItem('sms_students', JSON.stringify(list));
+  const normalized = Array.isArray(list) ? list.map(normalizeStudent) : [];
+  localStorage.setItem('sms_students', JSON.stringify(normalized));
 };
 
 /**
  * Fetch all students with hybrid fallback
  */
-const getAllStudents = async (page = 1, limit = 10) => {
+const getAllStudents = async (page = 1, limit = 50) => {
   // 1. Try REST API
   try {
-    const url = page ? `/students?page=${page}&limit=${limit || 10}` : '/students';
+    const url = page ? `/students?page=${page}&limit=${limit || 50}` : '/students';
     const response = await api.get(url);
     if (response.data) {
       const list = Array.isArray(response.data) ? response.data : (response.data.students || response.data.data);
       if (Array.isArray(list) && list.length > 0) {
-        setStoredStudents(list);
+        const normalized = list.map(normalizeStudent);
+        setStoredStudents(normalized);
+        const meta = response.data.meta || response.data.pagination || { total: normalized.length, page: Number(page), totalPages: 1 };
         return {
           success: true,
-          data: list,
-          students: list,
-          pagination: response.data.pagination || { total: list.length, page: Number(page), totalPages: 1 }
+          data: normalized,
+          students: normalized,
+          pagination: meta
         };
       }
     }
@@ -102,12 +124,13 @@ const getAllStudents = async (page = 1, limit = 10) => {
   try {
     const fsStudents = await firestoreService.getStudents();
     if (Array.isArray(fsStudents) && fsStudents.length > 0) {
-      setStoredStudents(fsStudents);
+      const normalized = fsStudents.map(normalizeStudent);
+      setStoredStudents(normalized);
       return {
         success: true,
-        data: fsStudents,
-        students: fsStudents,
-        pagination: { total: fsStudents.length, page: 1, totalPages: 1 }
+        data: normalized,
+        students: normalized,
+        pagination: { total: normalized.length, page: 1, totalPages: 1 }
       };
     }
   } catch (fsErr) {
@@ -130,7 +153,12 @@ const getAllStudents = async (page = 1, limit = 10) => {
 const getStudentMe = async () => {
   try {
     const response = await api.get('/students/me');
-    if (response.data) return response.data;
+    if (response.data) {
+      const s = response.data.data?.student || response.data.student || response.data.data;
+      if (s) {
+        return { success: true, data: { student: normalizeStudent(s) } };
+      }
+    }
   } catch (err) {}
 
   const currentUser = JSON.parse(localStorage.getItem('sms_user') || '{}');
@@ -139,7 +167,7 @@ const getStudentMe = async () => {
     s.email?.toLowerCase() === currentUser.email?.toLowerCase() ||
     s.user_id === currentUser.id
   );
-  return { success: true, data: { student: match || students[0] } };
+  return { success: true, data: { student: normalizeStudent(match || students[0]) } };
 };
 
 /**

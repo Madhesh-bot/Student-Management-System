@@ -44,6 +44,7 @@ const Marks = () => {
 
   const loadAllData = async () => {
     try {
+      setLoading(true);
       setError(null);
       setSuccess(null);
 
@@ -53,7 +54,7 @@ const Marks = () => {
           const meRes = await studentService.getStudentMe();
           studentProfile = meRes.data?.student || meRes.data;
         } catch (e) {
-          const studentsRes = await studentService.getAllStudents();
+          const studentsRes = await studentService.getAllStudents(1, 1000);
           const allStudents = studentsRes.data || [];
           setStudentsList(allStudents);
           studentProfile = allStudents.find(s => 
@@ -72,7 +73,7 @@ const Marks = () => {
           setError('No corresponding student profile found for your login account.');
         }
       } else {
-        const studentsRes = await studentService.getAllStudents();
+        const studentsRes = await studentService.getAllStudents(1, 1000);
         const allStudents = studentsRes.data || [];
         setStudentsList(allStudents);
         await loadMarkingSheet(allStudents);
@@ -98,9 +99,9 @@ const Marks = () => {
         const existingRecord = existingMarks.find(m => m.student_id === student.id);
         return {
           student_id: student.id,
-          register_number: student.register_number,
-          student_name: student.student_name,
-          department: student.department,
+          register_number: student.register_number || student.reg_no || '',
+          student_name: student.student_name || student.name || 'Unknown Student',
+          department: student.department || student.dept_name || '',
           internal_mark: existingRecord ? existingRecord.internal_mark : 0,
           assignment_mark: existingRecord ? existingRecord.assignment_mark || 0 : 0,
           practical_mark: existingRecord ? existingRecord.practical_mark || 0 : 0,
@@ -175,9 +176,10 @@ const Marks = () => {
 
   const filteredMarkingList = marksList.filter(item => {
     const term = localSearch.toLowerCase();
-    return item.student_name.toLowerCase().includes(term) ||
-           item.register_number.toLowerCase().includes(term) ||
-           (item.department && item.department.toLowerCase().includes(term));
+    const sName = (item.student_name || item.name || '').toLowerCase();
+    const regNo = (item.register_number || item.reg_no || '').toLowerCase();
+    const dept = (item.department || item.dept_name || '').toLowerCase();
+    return sName.includes(term) || regNo.includes(term) || dept.includes(term);
   });
 
   return (

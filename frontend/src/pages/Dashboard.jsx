@@ -53,6 +53,7 @@ const Dashboard = () => {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
+        setLoading(true);
         setError(null);
 
         if (isStudent) {
@@ -61,10 +62,10 @@ const Dashboard = () => {
             const meRes = await studentService.getStudentMe();
             studentProfile = meRes.data?.student || meRes.data;
           } catch (e) {
-            const studentsRes = await studentService.getAllStudents();
+            const studentsRes = await studentService.getAllStudents(1, 1000);
             const studentList = studentsRes.data || [];
-            studentProfile = studentList.find(s => 
-              s.user_id === currentUser?.id || 
+            studentProfile = studentList.find(s =>
+              s.user_id === currentUser?.id ||
               s.email?.toLowerCase() === currentUser?.email?.toLowerCase() ||
               s.register_number?.toLowerCase() === currentUser?.email?.toLowerCase()
             );
@@ -121,7 +122,7 @@ const Dashboard = () => {
             { department: 'Information Technology', count: 1 },
             { department: 'Electronics and Communication', count: 1 }
           ];
-          
+
           const avgAttendance = attendData.averageAttendanceRate || 92.5;
           const avgGrade = marksData.averageGrade || 88.5;
           const topPerformers = marksData.topPerformers || [
@@ -160,7 +161,7 @@ const Dashboard = () => {
 
   return (
     <div className="dashboard-wrapper page-transition-enter">
-      
+
       {/* Page Header */}
       <div className="page-header">
         <div>
@@ -168,7 +169,7 @@ const Dashboard = () => {
             {isStudent ? 'Student Executive Portal' : 'Institutional Overview'}
           </h1>
           <p style={{ color: 'var(--text-muted)' }}>
-            Welcome back, <strong>{currentUser ? currentUser.name : 'User'}</strong>! 
+            Welcome back, <strong>{currentUser ? currentUser.name : 'User'}</strong>!
             {isStudent ? ' Track your academic standing, component scores, and daily rosters.' : ' Monitor system metrics, department splits, and top academic evaluations.'}
           </p>
         </div>
@@ -189,7 +190,7 @@ const Dashboard = () => {
       {/* Student View */}
       {isStudent && studentStats.profile && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          
+
           <div className="dashboard-grid">
             <Card className="metric-card">
               <div className="metric-icon" style={{ backgroundColor: 'var(--warning-subtle)', color: 'var(--warning)' }}>
@@ -359,7 +360,7 @@ const Dashboard = () => {
 
           {/* Quick Actions & Department Analytics Row */}
           <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }} className="responsive-split">
-            
+
             {/* Top Performers Table */}
             <Card title="Top Academic Evaluated Performers">
               {adminStats.topPerformers.length > 0 ? (
@@ -434,7 +435,8 @@ const Dashboard = () => {
         </>
       )}
 
-      <style dangerouslySetInnerHTML={{__html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @media (max-width: 992px) {
           .responsive-split {
             grid-template-columns: 1fr !important;
