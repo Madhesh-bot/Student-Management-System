@@ -69,7 +69,8 @@ const Timetable = () => {
       setLoading(true);
       setError(null);
       const res = await timetableService.getTimetable(selectedDept, selectedYear, selectedSem);
-      setTimetable(res.data.data || []);
+      const grid = Array.isArray(res) ? res : (res.data?.data || res.data || []);
+      setTimetable(grid);
     } catch (err) {
       console.error(err);
       setError('Failed to retrieve class schedules.');

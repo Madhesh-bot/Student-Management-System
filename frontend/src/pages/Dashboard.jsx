@@ -150,15 +150,6 @@ const Dashboard = () => {
     fetchDashboardData();
   }, [isStudent, currentUser?.email, currentUser?.id]);
 
-  if (loading) {
-    return (
-      <div className="page-transition-enter" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        <SkeletonLoader type="card" count={4} />
-        <SkeletonLoader type="table" rows={6} />
-      </div>
-    );
-  }
-
   return (
     <div className="dashboard-wrapper page-transition-enter">
 
